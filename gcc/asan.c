@@ -1829,7 +1829,7 @@ build_check_stmt (location_t loc, tree base, tree len,
 int is_sink(int line, const char *filename)
 {
 	for (int i = 0; i < N; i++) {
-		if (sink_lines[i] == line && strcmp(filename, sink_filenames[i])) {
+		if (sink_lines[i] == line && (strcmp(filename, sink_filenames[i]) == 0)) {
 			return 1;
 		}
 	}
@@ -1856,9 +1856,10 @@ instrument_derefs (gimple_stmt_iterator *iter, tree t,
 
   expanded_location xloc = expand_location (location);
   if (!is_sink(xloc.line, xloc.file)) {
-  	printf("Inserting ASAN %d %s\n", xloc.line, xloc.file);
 	return;
   }
+
+ printf("Inserting ASAN %d %s\n", xloc.line, xloc.file);
  #endif
 
   type = TREE_TYPE (t);
