@@ -1822,6 +1822,21 @@ build_check_stmt (location_t loc, tree base, tree len,
    LOCATION is source code location.
    IS_STORE is either TRUE (for a store) or FALSE (for a load).  */
 
+#define SINK_CHECK
+#ifdef SINK_CHECK
+#include "sink_lines.h"
+
+int is_sink(int line, const char *filename)
+{
+	for (int i = 0; i < N; i++) {
+		if (sink_lines[i] == line && strcmp(filename, sink_filenames[i])) {
+			return 1;
+		}
+	}
+	return 0;
+}
+#endif
+
 static void
 instrument_derefs (gimple_stmt_iterator *iter, tree t,
 		   location_t location, bool is_store)
@@ -1831,10 +1846,20 @@ instrument_derefs (gimple_stmt_iterator *iter, tree t,
   if (!is_store && !ASAN_INSTRUMENT_READS)
     return;
 
+
   tree type, base;
   HOST_WIDE_INT size_in_bytes;
   if (location == UNKNOWN_LOCATION)
     location = EXPR_LOCATION (t);
+
+ #ifdef SINK_CHECK
+
+  expanded_location xloc = expand_location (location);
+  if (!is_sink(xloc.line, xloc.file)) {
+  	printf("Inserting ASAN %d %s\n", xloc.line, xloc.file);
+	return;
+  }
+ #endif
 
   type = TREE_TYPE (t);
   switch (TREE_CODE (t))
